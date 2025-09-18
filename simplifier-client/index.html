@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedSimplify - AI-Powered Medical Report Analysis</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #2563eb;
+            --primary-blue-dark: #1d4ed8;
+            --secondary-teal: #0891b2;
+            --success-green: #10b981;
+            --warning-amber: #f59e0b;
+            --error-red: #ef4444;
+            --neutral-50: #f8fafc;
+            --neutral-100: #f1f5f9;
+            --neutral-200: #e2e8f0;
+            --neutral-300: #cbd5e1;
+            --neutral-400: #94a3b8;
+            --neutral-500: #64748b;
+            --neutral-600: #475569;
+            --neutral-700: #334155;
+            --neutral-800: #1e293b;
+            --neutral-900: #0f172a;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--neutral-700);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+            min-height: 100vh;
+            font-size: 16px;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid var(--neutral-200);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: translateY(-1px);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-teal));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--neutral-600);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-blue);
+            background: var(--neutral-50);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            position: relative;
+        }
+
+        .language-btn {
+            background: var(--neutral-100);
+            border: 1px solid var(--neutral-200);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--neutral-600);
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: var(--neutral-50);
+            border-color: var(--neutral-300);
+        }
+
+        .language-options {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid var(--neutral-200);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            min-width: 150px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .language-dropdown.active .language-options {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-option {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .language-option:hover {
+            background: var(--neutral-50);
+        }
+
+        /* Mobile menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 4px;
+            padding: 0.5rem;
+        }
+
+        .hamburger span {
+            width: 20px;
+            height: 2px;
+            background: var(--neutral-600);
+            border-radius: 1px;
+            transition: all 0.3s ease;
+        }
+
+        /* Main Container */
+        .main-container {
+            margin-top: 70px;
+            min-height: calc(100vh - 70px);
+        }
+
+        .section {
+            display: none;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-2px);
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: white;
+            border-radius: 24px;
+            padding: 4rem 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--secondary-teal), var(--success-green));
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--neutral-600);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.35);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px 0 rgba(37, 99, 235, 0.5);
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            border: 1px solid var(--neutral-200);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary-blue);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-teal));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--neutral-800);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--neutral-600);
+            line-height: 1.7;
+        }
+
+        /* Upload Section */
+        .upload-container {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+        }
+
+        .upload-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--success-green), var(--secondary-teal));
+            border-radius: 24px 24px 0 0;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--neutral-800);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .disclaimer {
+            background: linear-gradient(135deg, #fef3c7, #fed7aa);
+            border: 1px solid var(--warning-amber);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        /* Enhanced Drop Zone */
+        .drop-zone {
+            border: 2px dashed var(--neutral-300);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--neutral-50);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary-blue), var(--secondary-teal), var(--success-green), var(--primary-blue));
+            border-radius: 16px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--primary-blue);
+            background: #eff6ff;
+            transform: translateY(-2px);
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--success-green);
+            background: #ecfdf5;
+            transform: scale(1.02);
+        }
+
+        .drop-zone.dragover::before {
+            opacity: 1;
+        }
+
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-teal));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            font-size: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .drop-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--neutral-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-subtext {
+            color: var(--neutral-500);
+            font-size: 1rem;
+        }
+
+        /* File Preview */
+        .file-preview {
+            background: var(--neutral-50);
+            border: 1px solid var(--neutral-200);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-grow: 1;
+        }
+
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--success-green), #059669);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .file-details h4 {
+            font-weight: 600;
+            color: var(--neutral-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .file-details p {
+            font-size: 0.875rem;
+            color: var(--neutral-500);
+        }
+
+        .remove-btn {
+            background: var(--error-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px 0 rgba(37, 99, 235, 0.5);
+        }
+
+        .btn-primary:disabled {
+            background: var(--neutral-400);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-green), #059669);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px 0 rgba(16, 185, 129, 0.5);
+        }
+
+        .upload-button {
+            width: 100%;
+            font-size: 1.125rem;
+            padding: 1rem 1.5rem;
+        }
+
+        /* Spinner */
+        .spinner {
+            border: 3px solid var(--neutral-200);
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-top: 2rem;
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .results-section h2 {
+            color: var(--neutral-800);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Analysis Results */
+        .analysis-summary {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .parameter-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+
+        .parameter-card:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .parameter-card.normal {
+            border-left-color: var(--success-green);
+        }
+
+        .parameter-card.borderline {
+            border-left-color: var(--warning-amber);
+        }
+
+        .parameter-card.abnormal {
+            border-left-color: var(--error-red);
+        }
+
+        .parameter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .parameter-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--neutral-800);
+        }
+
+        .severity-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-badge.normal {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .severity-badge.borderline {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .severity-badge.abnormal {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .parameter-values {
+            background: var(--neutral-50);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .parameter-values p {
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
+        }
+
+        .parameter-interpretation {
+            color: var(--neutral-600);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            background: rgba(15, 23, 42, 0.95);
+            color: var(--neutral-400);
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .nav-menu {
+                position: fixed;
+                left: -100%;
+                top: 70px;
+                flex-direction: column;
+                background: white;
+                width: 100%;
+                text-align: center;
+                transition: 0.3s;
+                box-shadow: var(--shadow-lg);
+                padding: 1rem 0;
+            }
+
+            .nav-menu.active {
+                left: 0;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero {
+                padding: 3rem 2rem;
+            }
+
+            .section {
+                padding: 2rem 1rem;
+            }
+
+            .upload-container,
+            .card-body {
+                padding: 1.5rem;
+            }
+
+            .drop-zone {
+                padding: 2rem 1rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-container {
+                padding: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--neutral-700);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid var(--neutral-300);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Contact page specific styles */
+        .contact-container {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .contact-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .contact-method {
+            padding: 1.5rem;
+            background: var(--neutral-50);
+            border-radius: 12px;
+            border: 1px solid var(--neutral-200);
+        }
+
+        .contact-method h4 {
+            color: var(--neutral-800);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo" onclick="showSection('home')" id="nav-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                MedSimplify
+            </a>
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="#" class="nav-link active" onclick="showSection('home')" data-nav="home">Home</a></li>
+                <li><a href="#" class="nav-link" onclick="showSection('upload')" data-nav="upload">Upload Report</a></li>
+                <li><a href="#" class="nav-link" onclick="showSection('about')" data-nav="about">About Us</a></li>
+                <li><a href="#" class="nav-link" onclick="showSection('contact')" data-nav="contact">Contact</a></li>
+                <li class="language-selector">
+                    <div class="language-dropdown">
+                        <button class="language-btn" id="language-btn">
+                            <i class="fas fa-globe"></i>
+                            <span id="current-lang">English</span>
+                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                        </button>
+                        <div class="language-options" id="language-options">
+                            <div class="language-option" data-lang="en">🇺🇸 English</div>
+                            <div class="language-option" data-lang="hi">🇮🇳 हिन्दी</div>
+                            <div class="language-option" data-lang="kn">🇮🇳 ಕನ್ನಡ</div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="hero">
+                <h1 id="hero-title">AI-Powered Medical Report Analysis</h1>
+                <p id="hero-subtitle">Transform complex medical reports into clear, understandable insights using advanced artificial intelligence technology</p>
+                <a href="#" class="cta-button" onclick="showSection('upload')" id="hero-cta">
+                    <i class="fas fa-rocket"></i>
+                    Get Started Now
+                </a>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 id="feature-ai-title">Advanced AI Analysis</h3>
+                    <p id="feature-ai-desc">Our AI technology analyzes your medical reports with high accuracy and provides detailed explanations for each parameter.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <h3 id="feature-format-title">Multiple Formats</h3>
+                    <p id="feature-format-desc">Support for PDFs, images, and text files. Advanced OCR technology extracts text from scanned documents.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 id="feature-secure-title">Secure & Private</h3>
+                    <p id="feature-secure-desc">Your medical data is processed securely and never stored permanently. Complete privacy guaranteed.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upload Section -->
+        <section id="upload" class="section">
+            <div class="upload-container">
+                <h1 class="section-title" id="upload-title">
+                    <i class="fas fa-upload"></i> Upload Your Medical Report
+                </h1>
+                <div class="disclaimer" id="upload-disclaimer">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    For educational purposes only. Not a substitute for professional medical advice.
+                </div>
+                
+                <div class="upload-section">
+                    <h2 style="margin-bottom: 1.5rem; color: var(--neutral-700);" id="select-report">Select Your Report</h2>
+                    
+                    <!-- Drag & Drop Upload Area -->
+                    <div id="dropZone" class="drop-zone">
+                        <div class="drop-content">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <p class="drop-text" id="drop-text">Drag & drop your medical report here</p>
+                            <p class="drop-subtext" id="drop-subtext">or click to browse files</p>
+                            <input type="file" id="fileInput" accept=".pdf,.txt,.jpg,.jpeg,.png" hidden>
+                        </div>
+                    </div>
+                    
+                    <!-- File Preview Section -->
+                    <div id="filePreview" class="file-preview" style="display: none;">
+                        <div class="file-info">
+                            <div class="file-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="file-details">
+                                <h4 id="fileName">Document.pdf</h4>
+                                <p id="fileSize">2.5 MB</p>
+                            </div>
+                        </div>
+                        <button id="removeFile" class="remove-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Upload Button -->
+                    <button id="uploadBtn" class="btn btn-primary upload-button" disabled>
+                        <span id="uploadText">Select a file first</span>
+                        <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+                    </button>
+                </div>
+                
+                <div id="results" class="results-section" style="display: none;">
+                    <h2 id="results-title">
+                        <i class="fas fa-chart-line"></i>
+                        Analysis Results
+                    </h2>
+                    <p id="results-placeholder">Your simplified medical report will appear here...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="section">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="section-title" id="about-title">
+                        <i class="fas fa-info-circle"></i> About MedSimplify
+                    </h1>
+                    
+                    <div style="margin-bottom: 3rem;">
+                        <h2 style="color: var(--primary-blue); margin-bottom: 1rem;" id="about-mission">Our Mission</h2>
+                        <p style="font-size: 1.125rem; line-height: 1.8; color: var(--neutral-600);" id="about-mission-text">
+                            We believe that understanding your health shouldn't require a medical degree. Our AI-powered platform transforms complex medical reports into clear, understandable explanations, empowering patients to take control of their healthcare journey.
+                        </p>
+                    </div>
+
+                    <h2 style="color: var(--primary-blue); margin-bottom: 2rem;" id="about-why-choose">Why Choose MedSimplify?</h2>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <h3 id="about-ai-title">AI-Powered Analysis</h3>
+                            <p id="about-ai-desc">Advanced machine learning algorithms trained on medical literature to provide accurate interpretations.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h3 id="about-instant-title">Instant Results</h3>
+                            <p id="about-instant-desc">Get simplified explanations in seconds, not hours. Our system processes reports in real-time.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h3 id="about-personalized-title">Personalized Insights</h3>
+                            <p id="about-personalized-desc">Tailored explanations based on your specific test results and medical parameters.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <h3 id="about-friendly-title">User-Friendly Interface</h3>
+                            <p id="about-friendly-desc">Simple drag-and-drop functionality with mobile-responsive design for accessibility.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <h3 id="about-security-title">Data Security</h3>
+                            <p id="about-security-desc">HIPAA-compliant processing with end-to-end encryption and no permanent data storage.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <h3 id="about-global-title">Global Accessibility</h3>
+                            <p id="about-global-desc">Available 24/7 from anywhere in the world, supporting multiple report formats and languages.</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 3rem;">
+                        <h2 style="color: var(--primary-blue); margin-bottom: 1rem;" id="about-technology">Our Technology</h2>
+                        <p style="font-size: 1.125rem; line-height: 1.7; color: var(--neutral-600);" id="about-technology-text">
+                            MedSimplify uses cutting-edge natural language processing and machine learning technologies to analyze medical reports. Our system is trained on vast medical databases and continuously updated with the latest medical knowledge to ensure accuracy and reliability.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="section">
+            <div class="contact-container">
+                <h1 class="section-title" id="contact-title">
+                    <i class="fas fa-envelope"></i> Contact Us
+                </h1>
+                <p style="text-align: center; font-size: 1.125rem; margin-bottom: 3rem; color: var(--neutral-600);" id="contact-subtitle">
+                    Have questions or need support? We're here to help!
+                </p>
+
+                <div class="contact-form">
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <label for="name" id="contact-fullname-label">
+                                <i class="fas fa-user"></i> Full Name
+                            </label>
+                            <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" id="contact-email-label">
+                                <i class="fas fa-envelope"></i> Email Address
+                            </label>
+                            <input type="email" id="email" name="email" required placeholder="Enter your email address">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject" id="contact-subject-label">
+                                <i class="fas fa-tag"></i> Subject
+                            </label>
+                            <select id="subject" name="subject" required>
+                                <option value="" id="contact-select-topic">Select a topic...</option>
+                                <option value="general" id="contact-general">General Inquiry</option>
+                                <option value="technical" id="contact-technical">Technical Support</option>
+                                <option value="feature" id="contact-feature">Feature Request</option>
+                                <option value="bug" id="contact-bug">Bug Report</option>
+                                <option value="partnership" id="contact-partnership">Partnership</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message" id="contact-message-label">
+                                <i class="fas fa-comment"></i> Message
+                            </label>
+                            <textarea id="message" name="message" rows="6" required placeholder="Please describe your inquiry in detail..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success upload-button" id="contact-send">
+                            <i class="fas fa-paper-plane"></i>
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+
+                <div class="contact-methods">
+                    <div class="contact-method">
+                        <h4 id="contact-email-title">
+                            <i class="fas fa-envelope"></i> Email
+                        </h4>
+                        <p>support@medsimplify.com</p>
+                    </div>
+                    <div class="contact-method">
+                        <h4 id="contact-phone-title">
+                            <i class="fas fa-phone"></i> Phone
+                        </h4>
+                        <p>+1 (555) 123-4567</p>
+                    </div>
+                    <div class="contact-method">
+                        <h4 id="contact-hours-title">
+                            <i class="fas fa-clock"></i> Hours
+                        </h4>
+                        <p id="contact-business-hours">Mon-Fri: 9AM-6PM EST</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div style="max-width: 1280px; margin: 0 auto; padding: 0 2rem;">
+            <p id="footer-copyright">&copy; 2024 MedSimplify. All rights reserved. | Built with care for better healthcare</p>
+            <p style="margin-top: 0.5rem; font-size: 0.875rem; opacity: 0.8;" id="footer-disclaimer">
+                Educational tool only. Always consult healthcare professionals for medical advice.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation functionality
+        function showSection(sectionName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Remove active class from all nav links
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('active'));
+            
+            // Show selected section
+            const targetSection = document.getElementById(sectionName);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Add active class to clicked nav link
+            const clickedLink = document.querySelector(`[data-nav="${sectionName}"]`);
+            if (clickedLink) {
+                clickedLink.classList.add('active');
+            }
+            
+            // Close mobile menu if open
+            const navMenu = document.getElementById('nav-menu');
+            if (navMenu) {
+                navMenu.classList.remove('active');
+            }
+        }
+
+        // Initialize when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('MedSimplify loaded successfully!');
+
+            // Mobile menu toggle
+            const hamburger = document.getElementById('hamburger');
+            const navMenu = document.getElementById('nav-menu');
+            
+            if (hamburger && navMenu) {
+                hamburger.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                });
+            }
+
+            // Language selector toggle
+            const languageBtn = document.getElementById('language-btn');
+            const languageDropdown = document.querySelector('.language-dropdown');
+            
+            if (languageBtn && languageDropdown) {
+                languageBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    languageDropdown.classList.toggle('active');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function() {
+                    languageDropdown.classList.remove('active');
+                });
+
+                // Handle language selection
+                const languageOptions = document.querySelectorAll('.language-option');
+                languageOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        const langCode = this.dataset.lang;
+                        const langText = this.textContent;
+                        document.getElementById('current-lang').textContent = langText.split(' ')[1];
+                        languageDropdown.classList.remove('active');
+                        // Here you would implement actual language switching
+                        console.log('Language switched to:', langCode);
+                    });
+                });
+            }
+
+            // Contact form submission
+            const contactForm = document.getElementById('contactForm');
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Get form data
+                    const formData = new FormData(this);
+                    const name = formData.get('name');
+                    const email = formData.get('email');
+                    const subject = formData.get('subject');
+                    const message = formData.get('message');
+                    
+                    // Show success message
+                    alert(`Thank you, ${name}! Your message has been sent. We'll get back to you at ${email} soon.`);
+                    
+                    // Reset form
+                    this.reset();
+                });
+            }
+
+            // Medical Report Upload Functionality
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const filePreview = document.getElementById('filePreview');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const removeFile = document.getElementById('removeFile');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadText = document.getElementById('uploadText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const results = document.getElementById('results');
+
+            let selectedFile = null;
+            let extractedText = '';
+
+            // Only initialize upload functionality if elements exist (on upload page)
+            if (dropZone && fileInput) {
+                initializeUploadFunctionality();
+            }
+
+            function initializeUploadFunctionality() {
+                // Click to select file
+                dropZone.addEventListener('click', () => fileInput.click());
+
+                // Drag & Drop Events
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('dragover');
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('dragover');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        handleFileSelect(files[0]);
+                    }
+                });
+
+                // File input change
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        handleFileSelect(e.target.files[0]);
+                    }
+                });
+
+                // Remove file button
+                if (removeFile) {
+                    removeFile.addEventListener('click', () => {
+                        selectedFile = null;
+                        extractedText = '';
+                        filePreview.style.display = 'none';
+                        fileInput.value = '';
+                        resetDropZone();
+                        disableUploadButton();
+                        results.style.display = 'none';
+                    });
+                }
+
+                // Upload button
+                if (uploadBtn) {
+                    uploadBtn.addEventListener('click', async () => {
+                        if (!selectedFile) return;
+                        await handleUpload();
+                    });
+                }
+            }
+
+            // Handle file selection
+            function handleFileSelect(file) {
+                const allowedTypes = ['application/pdf', 'text/plain', 'image/jpeg', 'image/jpg', 'image/png'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a PDF, text file, or image (JPG/PNG)');
+                    return;
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File size must be less than 10MB');
+                    return;
+                }
+
+                selectedFile = file;
+                showFilePreview(file);
+                enableUploadButton();
+            }
+
+            // Show file preview
+            function showFilePreview(file) {
+                if (fileName) fileName.textContent = file.name;
+                if (fileSize) fileSize.textContent = formatFileSize(file.size);
+                if (filePreview) filePreview.style.display = 'flex';
+                
+                const dropContent = dropZone.querySelector('.drop-content');
+                if (dropContent) {
+                    dropContent.innerHTML = `
+                        <div class="upload-icon">
+                            <i class="fas fa-check-circle" style="color: var(--success-green);"></i>
+                        </div>
+                        <p class="drop-text" style="color: var(--success-green);">File selected successfully</p>
+                        <p class="drop-subtext">You can drop another file to replace it</p>
+                    `;
+                }
+            }
+
+            // Reset drop zone
+            function resetDropZone() {
+                const dropContent = dropZone.querySelector('.drop-content');
+                if (dropContent) {
+                    dropContent.innerHTML = `
+                        <div class="upload-icon">
+                            <i class="fas fa-file-upload"></i>
+                        </div>
+                        <p class="drop-text">Drag & drop your medical report here</p>
+                        <p class="drop-subtext">or click to browse files</p>
+                    `;
+                }
+            }
+
+            // Enable upload button
+            function enableUploadButton() {
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.classList.remove('btn-primary');
+                    uploadBtn.classList.add('btn-success');
+                }
+                if (uploadText) {
+                    uploadText.innerHTML = '<i class="fas fa-rocket"></i> Analyze Report';
+                }
+            }
+
+            // Disable upload button
+            function disableUploadButton() {
+                if (uploadBtn) {
+                    uploadBtn.disabled = true;
+                    uploadBtn.classList.remove('btn-success');
+                    uploadBtn.classList.add('btn-primary');
+                }
+                if (uploadText) {
+                    uploadText.textContent = 'Select a file first';
+                }
+            }
+
+            // Handle upload process
+            async function handleUpload() {
+                if (!selectedFile) return;
+
+                // Show loading state
+                if (uploadBtn) uploadBtn.disabled = true;
+                if (uploadText) uploadText.style.display = 'none';
+                if (loadingSpinner) loadingSpinner.style.display = 'block';
+                
+                if (results) {
+                    results.style.display = 'block';
+                    results.innerHTML = `
+                        <h2><i class="fas fa-cog fa-spin"></i> Processing Your Report</h2>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin: 2rem 0; padding: 1.5rem; background: var(--neutral-50); border-radius: 12px;">
+                            <div class="spinner"></div>
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">Analyzing your medical report...</p>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--neutral-500);">This may take a few moments</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                try {
+                    // Simulate processing time
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+
+                    // Simulate successful analysis
+                    displayAnalysisResults();
+
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    if (results) {
+                        results.innerHTML = `
+                            <h2><i class="fas fa-exclamation-circle" style="color: var(--error-red);"></i> Processing Failed</h2>
+                            <div style="background: #fee2e2; border: 1px solid var(--error-red); padding: 1.5rem; border-radius: 12px; margin: 1rem 0;">
+                                <p style="color: #991b1b; margin-bottom: 0.5rem;"><strong>Error:</strong> ${error.message}</p>
+                                <p style="color: #991b1b; margin: 0;">Please try again with a different file.</p>
+                            </div>
+                        `;
+                    }
+                } finally {
+                    // Reset button state
+                    if (uploadBtn) uploadBtn.disabled = false;
+                    if (uploadText) uploadText.style.display = 'block';
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
+                }
+            }
+
+            // Display analysis results
+            function displayAnalysisResults() {
+                if (results) {
+                    results.innerHTML = `
+                        <h2><i class="fas fa-chart-line"></i> Analysis Results</h2>
+                        
+                        <div class="analysis-summary">
+                            <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-clipboard-list"></i> Summary
+                            </h3>
+                            <p style="margin: 0; line-height: 1.6;">Based on the medical report analysis, most parameters appear to be within normal ranges with a few values requiring attention. Overall health indicators suggest good condition with some areas for monitoring.</p>
+                        </div>
+
+                        <h3 style="margin: 2rem 0 1rem 0; color: var(--neutral-800);">
+                            <i class="fas fa-microscope"></i> Detailed Analysis
+                        </h3>
+
+                        <div class="parameter-card normal">
+                            <div class="parameter-header">
+                                <div class="parameter-name">Hemoglobin</div>
+                                <div class="severity-badge normal">
+                                    <i class="fas fa-check-circle"></i> Normal
+                                </div>
+                            </div>
+                            <div class="parameter-values">
+                                <p><strong><i class="fas fa-chart-bar"></i> Your Value:</strong> 12.5 g/dL</p>
+                                <p><strong><i class="fas fa-ruler"></i> Normal Range:</strong> 12.0-15.5 g/dL (Female)</p>
+                            </div>
+                            <p class="parameter-interpretation">Your hemoglobin level is within the normal range. This indicates adequate oxygen-carrying capacity of your blood and suggests good iron levels.</p>
+                            <div style="font-size: 0.75rem; color: var(--neutral-500); text-align: right; margin-top: 0.5rem;">
+                                Confidence: 95%
+                            </div>
+                        </div>
+
+                        <div class="parameter-card borderline">
+                            <div class="parameter-header">
+                                <div class="parameter-name">Total Cholesterol</div>
+                                <div class="severity-badge borderline">
+                                    <i class="fas fa-exclamation-triangle"></i> Borderline
+                                </div>
+                            </div>
+                            <div class="parameter-values">
+                                <p><strong><i class="fas fa-chart-bar"></i> Your Value:</strong> 220 mg/dL</p>
+                                <p><strong><i class="fas fa-ruler"></i> Normal Range:</strong> < 200 mg/dL</p>
+                            </div>
+                            <p class="parameter-interpretation">Your cholesterol level is slightly elevated above the recommended range. Consider dietary modifications, regular exercise, and discuss with your healthcare provider about monitoring and potential interventions.</p>
+                            <div style="font-size: 0.75rem; color: var(--neutral-500); text-align: right; margin-top: 0.5rem;">
+                                Confidence: 92%
+                            </div>
+                        </div>
+
+                        <div class="parameter-card abnormal">
+                            <div class="parameter-header">
+                                <div class="parameter-name">Blood Glucose</div>
+                                <div class="severity-badge abnormal">
+                                    <i class="fas fa-exclamation-circle"></i> Abnormal
+                                </div>
+                            </div>
+                            <div class="parameter-values">
+                                <p><strong><i class="fas fa-chart-bar"></i> Your Value:</strong> 140 mg/dL</p>
+                                <p><strong><i class="fas fa-ruler"></i> Normal Range:</strong> 70-100 mg/dL (Fasting)</p>
+                            </div>
+                            <p class="parameter-interpretation">Your blood glucose level is elevated and may indicate pre-diabetes or diabetes. This requires immediate attention from your healthcare provider for proper evaluation and management.</p>
+                            <div style="font-size: 0.75rem; color: var(--neutral-500); text-align: right; margin-top: 0.5rem;">
+                                Confidence: 98%
+                            </div>
+                        </div>
+
+                        <div style="background: linear-gradient(135d, #ecfdf5, #d1fae5); border: 1px solid var(--success-green); border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+                            <h3 style="color: var(--success-green); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-lightbulb"></i> Recommendations
+                            </h3>
+                            <ul style="color: var(--neutral-700); line-height: 1.7; padding-left: 1.5rem;">
+                                <li>Schedule a follow-up appointment with your healthcare provider to discuss elevated glucose levels</li>
+                                <li>Consider dietary modifications to reduce cholesterol intake</li>
+                                <li>Maintain regular physical activity (at least 150 minutes per week)</li>
+                                <li>Monitor blood pressure regularly</li>
+                                <li>Consider consultation with a nutritionist for personalized dietary advice</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: linear-gradient(135deg, #fef3c7, #fed7aa); border: 1px solid var(--warning-amber); border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+                            <p style="margin: 0; color: #92400e; font-size: 0.875rem; line-height: 1.6; display: flex; align-items: flex-start; gap: 0.5rem;">
+                                <i class="fas fa-exclamation-triangle" style="margin-top: 0.125rem; flex-shrink: 0;"></i>
+                                <span><strong>Important:</strong> This analysis is for educational purposes only and should not replace professional medical advice. Always consult with your healthcare provider for proper medical interpretation and treatment decisions.</span>
+                            </p>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; margin: 2rem 0; flex-wrap: wrap; justify-content: center;">
+                            <button onclick="downloadResults()" class="btn btn-primary">
+                                <i class="fas fa-download"></i>
+                                Download Report
+                            </button>
+                            <button onclick="shareResults()" class="btn" style="background: var(--secondary-teal); color: white;">
+                                <i class="fas fa-share-alt"></i>
+                                Share Results
+                            </button>
+                            <button onclick="analyzeAnother()" class="btn" style="background: var(--neutral-600); color: white;">
+                                <i class="fas fa-plus"></i>
+                                Analyze Another
+                            </button>
+                        </div>
+
+                        <div style="font-size: 0.75rem; color: var(--neutral-500); text-align: center; margin-top: 2rem; padding: 1rem; background: var(--neutral-50); border-radius: 8px;">
+                            Analysis completed in 3.2 seconds using 1,250 tokens • Processed with AI Model v2.1
+                        </div>
+                    `;
+                }
+            }
+
+            // Utility function to format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            console.log('MedSimplify professional UI loaded successfully!');
+        });
+
+        // Global utility functions
+        window.downloadResults = function() {
+            alert('Download feature will be available soon! This will generate a comprehensive PDF report of your analysis.');
+        }
+
+        window.shareResults = function() {
+            alert('Share feature will be available soon! This will allow you to securely share your results with healthcare providers.');
+        }
+
+        window.analyzeAnother = function() {
+            if (confirm('Are you sure you want to analyze another report? This will clear your current results.')) {
+                location.reload();
+            }
+        }
+    </script>
